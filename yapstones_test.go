@@ -1,6 +1,7 @@
 package yapstones
 
 import (
+	"strconv"
 	"testing"
 )
 
@@ -306,5 +307,99 @@ func TestParts(t *testing.T) {
 	}
 	if fpc != "1" {
 		t.Errorf("unexpected result %v ", fpc)
+	}
+}
+
+func TestMultiplication(t *testing.T) {
+	var a, b YapAmount
+	var c YapCalculator
+
+	as := "37310.09"
+	bs := "0.1"
+	if err := a.AmountFromString(as); err != nil {
+		t.Errorf("Conversion resulted in unexpected error %v", err)
+	}
+	if err := b.AmountFromString(bs); err != nil {
+		t.Errorf("Conversion resulted in unexpected error %v", err)
+	}
+	r, _ := c.Multiply(&a, &b)
+	sr := r.AmountAsString()
+	if s, err := strconv.ParseFloat(sr, 64); err == nil {
+		if s != 3731.009 {
+			t.Errorf("Multiplication failed  %v, %v, %v", as, bs, sr)
+		}
+	} else {
+		t.Errorf("Conversion to float resulted in unexpected error %v", err)
+	}
+
+	as = "-37310.09"
+	bs = "0.1"
+	if err := a.AmountFromString(as); err != nil {
+		t.Errorf("Conversion resulted in unexpected error %v", err)
+	}
+	if err := b.AmountFromString(bs); err != nil {
+		t.Errorf("Conversion resulted in unexpected error %v", err)
+	}
+	r, _ = c.Multiply(&a, &b)
+	sr = r.AmountAsString()
+	if s, err := strconv.ParseFloat(sr, 64); err == nil {
+		if s != -3731.009 {
+			t.Errorf("Multiplication failed  %v, %v, %v", as, bs, sr)
+		}
+	} else {
+		t.Errorf("Conversion to float resulted in unexpected error %v", err)
+	}
+
+	as = "37310.09"
+	bs = "0"
+	if err := a.AmountFromString(as); err != nil {
+		t.Errorf("Conversion resulted in unexpected error %v", err)
+	}
+	if err := b.AmountFromString(bs); err != nil {
+		t.Errorf("Conversion resulted in unexpected error %v", err)
+	}
+	r, _ = c.Multiply(&a, &b)
+	if r.Value != 0 || r.Factor != 0 {
+		t.Errorf("Multiplication failed  %v, %v, %v", as, bs, r)
+	}
+
+	as = "0"
+	bs = "37310.09"
+	if err := a.AmountFromString(as); err != nil {
+		t.Errorf("Conversion resulted in unexpected error %v", err)
+	}
+	if err := b.AmountFromString(bs); err != nil {
+		t.Errorf("Conversion resulted in unexpected error %v", err)
+	}
+	r, _ = c.Multiply(&a, &b)
+	if r.Value != 0 || r.Factor != 0 {
+		t.Errorf("Multiplication failed  %v, %v, %v", as, bs, r)
+	}
+
+	a.Value = 1 << 50
+	a.Factor = 2
+	b.Value = 1 << 50
+	b.Factor = 1
+	r, err := c.Multiply(&a, &b)
+	if err == nil {
+		t.Errorf("Overflow verification failed  %v, %v, %v", a, b, r)
+	}
+
+	a.Value = 1<<63 - 1
+	a.Factor = 2
+	b.Value = 1
+	b.Factor = 1
+	r, err = c.Multiply(&a, &b)
+	if err != nil {
+		t.Errorf("Overflow verification failed  %v, %v, %v", a, b, r)
+	}
+
+	a.Value = -(1 << 63)
+	a.Factor = 2
+	b.Value = 2
+	b.Factor = 1
+	r, err = c.Multiply(&a, &b)
+	if err == nil {
+		t.Errorf("Overflow verification failed  %v, %v, %v", a, b, r)
 	}
 }
