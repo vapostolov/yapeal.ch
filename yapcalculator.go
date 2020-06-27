@@ -70,3 +70,38 @@ func (c *YapCalculator) Multiply(a, b *YapAmount) (ya *YapAmount, err error) {
 	}
 	return
 }
+
+// Divide two amounts
+func (c *YapCalculator) Divide(a, b *YapAmount, precision uint8) (ya *YapAmount, err error) {
+	if b.Value == 0 {
+		err = fmt.Errorf("Division by zero error")
+		return
+	}
+
+	var factor uint8
+	if a.Factor > b.Factor {
+		factor = a.Factor
+	} else {
+		factor = b.Factor
+	}
+
+	a.NormalizeWith(factor)
+	b.NormalizeWith(factor)
+	remainder := a.Value % b.Value
+	result := a.Value / b.Value
+	if remainder == 0 {
+		ya = &YapAmount{Value: result, Factor: 0}
+		return
+	}
+	factor = 0
+	for precision > 0 {
+		result *= 10
+		remainder *= 10
+		result += remainder / b.Value
+		remainder = remainder % b.Value
+		precision--
+		factor++
+	}
+	ya = &YapAmount{Value: result, Factor: factor}
+	return
+}

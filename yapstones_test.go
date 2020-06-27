@@ -403,3 +403,21 @@ func TestMultiplication(t *testing.T) {
 		t.Errorf("Overflow verification failed  %v, %v, %v", a, b, r)
 	}
 }
+
+func TestDivision(t *testing.T) {
+	var a, b YapAmount
+	var c YapCalculator
+
+	as := "0.21"
+	bs := "9.95"
+	if err := a.AmountFromString(as); err != nil {
+		t.Errorf("Conversion resulted in unexpected error %v", err)
+	}
+	if err := b.AmountFromString(bs); err != nil {
+		t.Errorf("Conversion resulted in unexpected error %v", err)
+	}
+	r, _ := c.Divide(&a, &b, 10)
+	if r.Value != 211055276 || r.Factor != 10 {
+		t.Errorf("Division failed  %v, %v, %v", as, bs, r)
+	}
+}
