@@ -2,6 +2,7 @@ package yapstones
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -12,18 +13,18 @@ import (
 const DefaultMultiplier = 6
 
 // multipliers array used to shift representations
-var multipliers = map[uint8]int64{
-	0: 1,
-	1: 10,
-	2: 100,
-	3: 1000,
-	4: 10000,
-	5: 100000,
-	6: 1000000,
-	7: 10000000,
-	8: 100000000,
-	9: 1000000000,
-}
+// var multipliers = map[uint8]int64{
+// 	0: 1,
+// 	1: 10,
+// 	2: 100,
+// 	3: 1000,
+// 	4: 10000,
+// 	5: 100000,
+// 	6: 1000000,
+// 	7: 10000000,
+// 	8: 100000000,
+// 	9: 1000000000,
+// }
 
 // zeros all zeros used for padding
 const zeros = "0000000000000000"
@@ -54,8 +55,8 @@ func (y YapAmount) AmountAsString() (res string) {
 	var f int64
 	var pad uint8
 
-	v = Abs(y.Value) / multipliers[y.Factor]
-	f = Abs(y.Value) % multipliers[y.Factor]
+	v = Abs(y.Value) / GetMultiplier(y.Factor)
+	f = Abs(y.Value) % GetMultiplier(y.Factor)
 
 	vs := strconv.FormatInt(v, 10)
 	fs := strconv.FormatInt(f, 10)
@@ -85,12 +86,12 @@ func (y YapAmount) AmountAsString() (res string) {
 
 // AmountAsInt64 returns the integer amount
 func (y *YapAmount) AmountAsInt64() (res int64) {
-	res = y.Value / multipliers[y.Factor]
+	res = y.Value / GetMultiplier(y.Factor)
 	return
 }
 
 func (y *YapAmount) AmountAsFloat64() (res float64) {
-	res = float64(y.Value) / float64(multipliers[y.Factor])
+	res = float64(y.Value) / float64(GetMultiplier(y.Factor))
 	return
 }
 
@@ -133,11 +134,15 @@ func (y *YapAmount) AmountFromString(value string) (err error) {
 				log.Warnf("amount conversion %v %v", value, err)
 				return
 			}
-			f = f * multipliers[uint8(DefaultMultiplier-l)]
+			f = f * GetMultiplier(uint8(DefaultMultiplier-l))
 		}
 	}
 	y.Factor = DefaultMultiplier
-	y.Value = v*multipliers[y.Factor] + f
+	if v >= 0 {
+		y.Value = v*GetMultiplier(y.Factor) + f
+	} else {
+		y.Value = v*GetMultiplier(y.Factor) - f
+	}
 	return
 }
 
@@ -158,10 +163,10 @@ func (y *YapAmount) Normalize() {
 	if y.Factor != DefaultMultiplier {
 		if y.Factor > DefaultMultiplier {
 			d := y.Factor - DefaultMultiplier
-			y.Value = y.Value / multipliers[d]
+			y.Value = y.Value / GetMultiplier(d)
 		} else {
 			d := DefaultMultiplier - y.Factor
-			y.Value = y.Value * multipliers[d]
+			y.Value = y.Value * GetMultiplier(d)
 		}
 		y.Factor = DefaultMultiplier
 	}
@@ -172,10 +177,10 @@ func (y *YapAmount) NormalizeWith(multiplier uint8) {
 	if y.Factor != multiplier {
 		if y.Factor > multiplier {
 			d := y.Factor - multiplier
-			y.Value = y.Value / multipliers[d]
+			y.Value = y.Value / GetMultiplier(d)
 		} else {
 			d := multiplier - y.Factor
-			y.Value = y.Value * multipliers[d]
+			y.Value = y.Value * GetMultiplier(d)
 		}
 		y.Factor = multiplier
 	}
@@ -192,8 +197,8 @@ func Abs(x int64) int64 {
 // GetParts with 10 digits as strings
 func (y *YapAmount) GetParts() (intPart, fractPart string) {
 
-	v := Abs(y.Value) / multipliers[y.Factor]
-	f := Abs(y.Value) % multipliers[y.Factor]
+	v := Abs(y.Value) / GetMultiplier(y.Factor)
+	f := Abs(y.Value) % GetMultiplier(y.Factor)
 
 	vs := strconv.FormatInt(v, 10)
 	fs := strconv.FormatInt(f, 10)
@@ -210,4 +215,9 @@ func (y *YapAmount) GetParts() (intPart, fractPart string) {
 	fractPart = zeros[0:pad] + fs
 
 	return
+}
+
+// GetMultiplier returns multiplier used to shift representations
+func GetMultiplier(x uint8) int64 {
+	return int64(math.Pow10(int(x)))
 }
