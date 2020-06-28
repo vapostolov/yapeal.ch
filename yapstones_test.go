@@ -420,4 +420,31 @@ func TestDivision(t *testing.T) {
 	if r.Value != 211055276 || r.Factor != 10 {
 		t.Errorf("Division failed  %v, %v, %v", as, bs, r)
 	}
+
+	a.Value = 2200
+	a.Factor = 2
+	b.Value = 70
+	b.Factor = 1
+	r, _ = c.Divide(&a, &b, 10)
+	if r.Value != 31428571428 || r.Factor != 10 {
+		t.Errorf("Division failed  %v, %v, %v", as, bs, r)
+	}
+
+	a.Value = 2200
+	a.Factor = 2
+	b.Value = 0
+	b.Factor = 0
+	_, err := c.Divide(&a, &b, 10)
+	if err == nil {
+		t.Errorf("Division by zero failed  %v, %v", a, b)
+	}
+
+	a.Value = 2200
+	a.Factor = 2
+	b.Value = 20
+	b.Factor = 1
+	r, _ = c.Divide(&a, &b, 10)
+	if r.Value != 11 || r.Factor != 0 {
+		t.Errorf("Division failed  %v, %v, %v", as, bs, r)
+	}
 }
