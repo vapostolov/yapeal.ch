@@ -448,3 +448,85 @@ func TestDivision(t *testing.T) {
 		t.Errorf("Division failed  %v, %v, %v", as, bs, r)
 	}
 }
+
+func TestAddition(t *testing.T) {
+	var a, b YapAmount
+	var c YapCalculator
+
+	a.Value = 1<<63 - 1
+	a.Factor = 0
+	b.Value = 1 << 50
+	b.Factor = 0
+	_, err := c.Add(&a, &b)
+	if err == nil {
+		t.Errorf("Overflow adding failed  %v, %v", a, b)
+	}
+
+	a.Value = -1
+	a.Factor = 0
+	b.Value = -(1 << 63)
+	b.Factor = 0
+	_, err = c.Add(&a, &b)
+	if err == nil {
+		t.Errorf("Overflow adding failed  %v, %v", a, b)
+	}
+
+	a.Value = 1
+	a.Factor = 0
+	b.Value = -(1 << 63)
+	b.Factor = 0
+	_, err = c.Add(&a, &b)
+	if err != nil {
+		t.Errorf("Overflow adding failed  %v, %v", a, b)
+	}
+
+	a.Value = 2200
+	a.Factor = 2
+	b.Value = 70
+	b.Factor = 2
+	r, _ := c.Add(&a, &b)
+	if r.Value != 2270 || r.Factor != 2 {
+		t.Errorf("Addition failed  %v, %v, %v", a, b, r)
+	}
+}
+
+func TestSubtraction(t *testing.T) {
+	var a, b YapAmount
+	var c YapCalculator
+
+	a.Value = 1<<63 - 1
+	a.Factor = 0
+	b.Value = -1
+	b.Factor = 0
+	_, err := c.Subtract(&a, &b)
+	if err == nil {
+		t.Errorf("Overflow subtracting failed  %v, %v", a, b)
+	}
+
+	a.Value = -2
+	a.Factor = 0
+	b.Value = 1<<63 - 1
+	b.Factor = 0
+	_, err = c.Subtract(&a, &b)
+	if err == nil {
+		t.Errorf("Overflow subtracting failed  %v, %v", a, b)
+	}
+
+	a.Value = 2
+	a.Factor = 0
+	b.Value = 1<<63 - 1
+	b.Factor = 0
+	_, err = c.Subtract(&a, &b)
+	if err != nil {
+		t.Errorf("Overflow subtracting failed  %v, %v", a, b)
+	}
+
+	a.Value = 2200
+	a.Factor = 2
+	b.Value = 70
+	b.Factor = 2
+	r, _ := c.Subtract(&a, &b)
+	if r.Value != 2130 || r.Factor != 2 {
+		t.Errorf("Subtraction failed  %v, %v, %v", a, b, r)
+	}
+}

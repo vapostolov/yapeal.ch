@@ -1,6 +1,8 @@
 package yapstones
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // YapCalculator contains calculators used in amount and money
 type YapCalculator struct{}
@@ -10,25 +12,39 @@ const mostPositive = 1<<63 - 1
 
 // Add to amounts
 func (c *YapCalculator) Add(a, b *YapAmount) (ya *YapAmount, err error) {
-	if a.Factor == b.Factor {
-		ya = &YapAmount{Value: a.Value + b.Value, Factor: a.Factor}
-	} else {
+	if a.Factor != b.Factor {
 		a.Normalize()
 		b.Normalize()
-		ya = &YapAmount{Value: a.Value + b.Value, Factor: a.Factor}
 	}
+	if b.Value > 0 {
+		if a.Value > mostPositive-b.Value {
+			return nil, fmt.Errorf("Overflow adding %v and %v", a, b)
+		}
+	} else {
+		if a.Value < mostNegative-b.Value {
+			return nil, fmt.Errorf("Overflow adding %v and %v", a, b)
+		}
+	}
+	ya = &YapAmount{Value: a.Value + b.Value, Factor: a.Factor}
 	return
 }
 
 // Subtract two amounts
 func (c *YapCalculator) Subtract(a, b *YapAmount) (ya *YapAmount, err error) {
-	if a.Factor == b.Factor {
-		ya = &YapAmount{Value: a.Value - b.Value, Factor: a.Factor}
-	} else {
+	if a.Factor != b.Factor {
 		a.Normalize()
 		b.Normalize()
-		ya = &YapAmount{Value: a.Value - b.Value, Factor: a.Factor}
 	}
+	if b.Value < 0 {
+		if a.Value > mostPositive+b.Value {
+			return nil, fmt.Errorf("Overflow subtracting %v and %v", a, b)
+		}
+	} else {
+		if a.Value < mostNegative+b.Value {
+			return nil, fmt.Errorf("Overflow subtracting %v and %v", a, b)
+		}
+	}
+	ya = &YapAmount{Value: a.Value - b.Value, Factor: a.Factor}
 	return
 }
 
